@@ -335,6 +335,7 @@
   .leaflet-control-attribution{ background:rgba(0,0,0,.35) !important; color:#ccc !important; }
   body[data-theme="light"] .leaflet-control-attribution{ background:rgba(255,255,255,.75) !important; color:#555 !important; }
   .leaflet-control-attribution a{ color:inherit !important; }
+  #mapCanvas.tiles-dark .osm-tiles{ filter:invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.6); }
   .pin-wrap{ background:none; border:none; }
   .pin{ width:34px; height:34px; border-radius:50%; background:var(--surface); border:2px solid var(--text-faint); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.45); transition:transform .12s; }
   .pin b{ font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text); }
@@ -1717,7 +1718,7 @@ function parseLatLng(raw){
   return [a, b];
 }
 const hasLoc = p => !!p && isNum(p.lat) && isNum(p.lng);
-let mapEl = null, map = null, pinLayer = null, tiles = null, tileTheme = "", mapSel = null, pickPid = null, mapFitted = false, mapFocus = null, leafletP = null;
+let mapEl = null, map = null, pinLayer = null, tiles = null, mapSel = null, pickPid = null, mapFitted = false, mapFocus = null, leafletP = null;
 function loadLeaflet(){
   if(window.L) return Promise.resolve();
   if(leafletP) return leafletP;
@@ -1732,12 +1733,12 @@ function loadLeaflet(){
 function parkMap(){ if(mapEl && mapEl.parentNode) mapEl.parentNode.removeChild(mapEl); }
 function setTiles(){
   if(!map) return;
-  const th = document.body.dataset.theme==="light" ? "light_all" : "dark_all";
-  if(tiles && tileTheme===th) return;
-  if(tiles) map.removeLayer(tiles);
-  tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/"+th+"/{z}/{x}/{y}{r}.png", { subdomains:"abcd", maxZoom:20,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
-  tileTheme = th;
+  // OpenStreetMap standard tiles: no API key needed. Dark mode darkens them with a CSS filter (see .tiles-dark).
+  if(!tiles){
+    tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, className:"osm-tiles",
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+  }
+  mapEl.classList.toggle("tiles-dark", document.body.dataset.theme!=="light");
 }
 function mountMap(){
   const slot = $("#mapSlot"); if(!slot) return;
@@ -1857,9 +1858,13 @@ document.addEventListener("keydown", e => {
 });
 
 /* =================== Versions =================== */
-const APP_VERSION = "V2.0";
+const APP_VERSION = "V2.0.1";
 const VERSION_LOG = [
-  { no:"V2.0", name:"Ledger look, baht only and a map", date:"Sep 2026", current:true, items:[
+  { no:"V2.0.1", name:"Map tiles without an API key", date:"Sep 2026", current:true, items:[
+    "The map now uses OpenStreetMap's standard tiles, which need no API key. CARTO's tiles had started showing “API key required” over the whole map.",
+    "In dark mode the map is darkened to match the app; light mode shows the normal OpenStreetMap colours.",
+  ]},
+  { no:"V2.0", name:"Ledger look, baht only and a map", date:"Sep 2026", current:false, items:[
     "New look to match Ledger: the Ledger Sans font, a numbered sidebar, a ticker strip across the top and dark mode by default. Light mode is in the sidebar.",
     "Phones get Ledger's bottom tab bar, with Projects, My finance and Versions under More.",
     "Everything is in Thai baht. The income currency and exchange rate are gone; if your income was saved in AUD, My finance asks you to enter it in THB.",
