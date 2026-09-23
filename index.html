@@ -547,6 +547,7 @@ const PROJECT_SCHEMA = [
     {k:"walkToStation", l:"Walk to station (min)", t:"num", better:"low"},
     {k:"commuteAM", l:"Commute to work, morning rush (min)", t:"num", better:"low"},
     {k:"commutePM", l:"Commute home, evening rush (min)", t:"num", better:"low"},
+    {k:"otherPlaces", l:"Travel to other places you go often", t:"text", hint:"For example family, gym or hospital, with minutes."},
     {k:"trafficJam", l:"Traffic jam area", t:"tri", good:"no"},
   ]},
   {sec:"Nearby", fields:[
@@ -564,6 +565,7 @@ const PROJECT_SCHEMA = [
   {sec:"Building & juristic person", fields:[
     {k:"totalUnits", l:"Total units", t:"num"},
     {k:"lifts", l:"Passenger lifts", t:"num"},
+    {k:"unitsPerFloor", l:"Units per floor", t:"num", better:"low"},
     {k:"parkingPct", l:"Parking (% of units)", t:"num", better:"high"},
     {k:"parkingType", l:"Parking type", t:"select", opts:["Fixed","First-come","None"]},
     {k:"commonFeeSqm", l:"Common fee (฿ / sqm / month)", t:"num", better:"low"},
@@ -572,10 +574,11 @@ const PROJECT_SCHEMA = [
     {k:"sinkingHealthy", l:"Sinking fund balance healthy", t:"tri", good:"yes"},
     {k:"feeArrears", l:"Many owners behind on common fees", t:"tri", good:"no"},
     {k:"pets", l:"Pets allowed", t:"tri"},
+    {k:"rulesChecked", l:"Building rules read (pets, renting out, renovation)", t:"tri", good:"yes"},
     {k:"foreignQuota", l:"Foreign quota available", t:"tri", good:"yes"},
   ]},
   {sec:"Investment & resale", fields:[
-    {k:"rentalYield", l:"Rental yield in the area (%)", t:"num", better:"high"},
+    {k:"rentalYield", l:"Rental yield in the area (%)", t:"num", better:"high", hint:"Plan on monthly or longer leases. Daily rentals in condos break the Hotel Act."},
     {k:"rentalDemand", l:"Real tenant demand", t:"rate"},
     {k:"newSupply", l:"Lots of new condo supply within 1–2 km", t:"tri", good:"no"},
     {k:"resaleLiquidity", l:"Resale liquidity of this developer's projects", t:"rate"},
@@ -599,6 +602,7 @@ const UNIT_SCHEMA = [
     {k:"rejectReason", l:"Reason for rejecting", t:"text", hint:"Required when the status is Rejected."},
     {k:"price", l:"Price (฿)", t:"num", better:"low"},
     {k:"size", l:"Size (sqm)", t:"num", better:"high"},
+    {k:"usableArea", l:"Usable area, excl. columns and ducts (sqm)", t:"num", better:"high", hint:"Measure on site. Show rooms often have no columns or pipes."},
     {k:"floor", l:"Floor", t:"num"},
     {k:"orientation", l:"Facing", t:"select", opts:ORIENT},
     {k:"secondHand", l:"Second-hand", t:"tri"},
@@ -619,6 +623,7 @@ const UNIT_SCHEMA = [
     {k:"nearLift", l:"Next to lift", t:"tri", good:"no"},
     {k:"nearGarbage", l:"Next to garbage room", t:"tri", good:"no"},
     {k:"nearCommon", l:"Next to common area", t:"tri", good:"no"},
+    {k:"facesRoad", l:"Faces a busy road", t:"tri", good:"no"},
     {k:"compressorOk", l:"Good spot for AC compressor", t:"tri", good:"yes"},
   ]},
   {sec:"Legal & condition", fields:[
@@ -644,6 +649,18 @@ const FINANCE_SCHEMA = [
     {k:"dtiLimit", l:"Max installment as % of income", t:"num", hint:"Your list says 30–40%. Other debts count too."},
     {k:"minDownPct", l:"Minimum down payment (%)", t:"num"},
   ]},
+  {sec:"What you need (from your checklist)", fields:[
+    {k:"needSize", l:"Target size (sqm)", t:"num"},
+    {k:"needBedrooms", l:"Bedrooms needed", t:"num"},
+    {k:"needLiving", l:"Separate living room", t:"tri"},
+    {k:"needKitchen", l:"A proper kitchen", t:"tri"},
+    {k:"needLaundry", l:"Laundry spot", t:"tri"},
+    {k:"needHanging", l:"Drying / hanging area", t:"tri"},
+    {k:"needParking", l:"Car park", t:"tri"},
+  ]},
+  {sec:"Ownership", fields:[
+    {k:"mainHome", l:"It will be your main home (name in house registration)", t:"tri", hint:"Main homes are exempt from land and building tax up to ฿50M. Otherwise the tax is about 0.02% a year of the appraised value."},
+  ]},
   {sec:"Loan assumptions (used when a unit has no bank offers)", fields:[
     {k:"termYears", l:"Loan term (years)", t:"num"},
     {k:"defRate", l:"Average rate, first 3 years (%)", t:"num"},
@@ -657,8 +674,8 @@ const LOAN_SCHEMA = [
     {k:"y1", l:"Year 1 rate (%)", t:"num"},
     {k:"y2", l:"Year 2 rate (%)", t:"num"},
     {k:"y3", l:"Year 3 rate (%)", t:"num"},
-    {k:"mrr", l:"Bank's MRR (%)", t:"num"},
-    {k:"spread", l:"After year 3: MRR minus (%)", t:"num"},
+    {k:"mrr", l:"Bank's MRR or MLR (%)", t:"num", hint:"Whichever rate the offer is based on."},
+    {k:"spread", l:"After year 3: MRR/MLR minus (%)", t:"num"},
     {k:"term", l:"Loan term (years)", t:"num"},
   ]},
   {sec:"Fees & terms", fields:[
@@ -695,10 +712,12 @@ const CHECKLIST = [
   {k:"banks", l:"Compared at least 3 bank offers", auto:u=>(u.loans||[]).length>=3 ? `${(u.loans||[]).length} offers recorded` : ""},
   {k:"credit", l:"Checked your credit bureau report", auto:()=>fin().credit==="Checked, OK" ? "Checked in My finance" : ""},
   {k:"quota", l:"Checked the building's foreign quota (if you might resell to a foreigner)"},
+  {k:"rules", l:"Read the building rules: pets, renting out (no daily rentals) and renovation", auto:u=>proj(u).rulesChecked==="yes" ? "Marked as read on the project" : ""},
   {k:"pressure", l:"Not paying a deposit under “today only” promotion pressure"},
 ];
 
-const DEF_FIN = {income:"", otherDebt:"", savings:"", credit:"Not checked", dtiLimit:"35", minDownPct:"20", termYears:"30", defRate:"3.5", afterRate:"7"};
+const DEF_FIN = {income:"", otherDebt:"", savings:"", credit:"Not checked", dtiLimit:"35", minDownPct:"20", termYears:"30", defRate:"3.5", afterRate:"7",
+  needSize:"50", needBedrooms:"1", needLiving:"yes", needKitchen:"yes", needLaundry:"yes", needHanging:"yes", needParking:"", mainHome:""};
 const SECTIONS = [
   {k:"afford", l:"Affordability"},
   {k:"location", l:"Location & transport"},
@@ -845,7 +864,8 @@ $("#importFile").addEventListener("change", async e => {
   try{
     const d = JSON.parse(await f.text());
     if(!d || typeof d.projects!=="object" || typeof d.units!=="object") throw new Error("shape");
-    const ps = Object.values(d.projects).filter(p=>p&&p.id), us = Object.values(d.units).filter(u=>u&&u.id), ss = Object.values(d.settings||{}).filter(x=>x&&x.id);
+    const okId = x => x && typeof x==="object" && /^[A-Za-z0-9_-]{1,64}$/.test(String(x.id||""));
+    const ps = Object.values(d.projects).filter(okId), us = Object.values(d.units).filter(okId), ss = Object.values(d.settings||{}).filter(x => okId(x) && ["finance","weights"].includes(x.id));
     ps.forEach(p=>put("projects",p)); us.forEach(u=>put("units",u)); ss.forEach(x=>put("settings",x));
     toast(`Imported ${plural(ps.length,"project")} and ${plural(us.length,"unit")}.`);
   }catch(err){ toast("That file isn't a condo shortlist export."); }
@@ -867,6 +887,7 @@ function computed(u){
     monthlyFee: fee!==null && size!==null ? fee*size : null,
     sinkingTotal: sink!==null && size!==null ? sink*size : null,
     unitsPerLift: units!==null && lifts ? units/lifts : null,
+    usablePct: n(u.usableArea)!==null && size ? n(u.usableArea)/size*100 : null,
   };
 }
 function pmt(P, ratePct, months){
@@ -910,7 +931,12 @@ function offerFor(u){
   }
   return {offer:null, why:"your default rates in My finance"};
 }
+const dealCache = new Map();
 function deal(u){
+  if(dealCache.has(u)) return dealCache.get(u);
+  const r = dealCalc(u); dealCache.set(u, r); return r;
+}
+function dealCalc(u){
   const la = loanAmountOf(u); if(!la) return null;
   const f = fin(), c = computed(u);
   const {offer, why} = offerFor(u);
@@ -926,12 +952,13 @@ function deal(u){
   const dtiAfter = inc ? (lc.payAfter+otherDebt)/inc*100 : null;
   const fee = c.monthlyFee||0;
   const savings = n(f.savings);
-  return { ...la, lc, offer, why, transfer, other, sinking, loanFees, upfront,
+  const taxYear = f.mainHome==="yes" && la.price<=50e6 ? 0 : la.price*0.0002;
+  return { ...la, lc, offer, why, transfer, other, sinking, loanFees, upfront, taxYear,
     downPct: la.price ? la.down/la.price*100 : null,
     allIn: lc.pay + fee, allInAfter: lc.payAfter + fee, fee,
     dti, dtiAfter, dtiLimit: n(f.dtiLimit) ?? 35, minDown: n(f.minDownPct) ?? 20,
     shortfall: savings!==null ? upfront - savings : null,
-    cost3: upfront + (lc.pay + fee)*36 };
+    cost3: upfront + (lc.pay + fee)*36 + taxYear*3 };
 }
 function slotsMissing(u){
   const have = new Set((u.visits||[]).map(v=>v.slot));
@@ -953,7 +980,20 @@ function flags(u){
     if(d.downPct!==null && d.downPct < d.minDown - 0.01) R(`Down payment is ${pct(d.downPct)}, below your ${d.minDown}% minimum`);
     if(d.shortfall!==null && d.shortfall>0) R(`Cash needed up front is ${baht(d.shortfall)} more than your savings`);
   }
+  const needY = k => f[k]==="yes";
+  if(needY("needParking")){
+    if(p.parkingType==="None") R("No parking in this building, and you need a car park");
+    else if(p.parkingType==="First-come") A(`Parking is first-come${isNum(p.parkingPct)?`, for ${fmt(n(p.parkingPct))}% of units`:""}`);
+    else if(isNum(p.parkingPct) && n(p.parkingPct)<100 && p.parkingType!=="Fixed") A(`Parking for only ${fmt(n(p.parkingPct))}% of units`);
+  }
+  if(isNum(f.needSize) && isNum(u.size) && n(u.size) < n(f.needSize)) A(`${fmt(n(u.size),1)} sqm, below your ${fmt(n(f.needSize))} sqm target`);
+  if(isNum(f.needBedrooms) && isNum(u.bedrooms) && n(u.bedrooms) < n(f.needBedrooms)) A(`${plural(n(u.bedrooms),"bedroom")}, you need ${fmt(n(f.needBedrooms))}`);
+  if(needY("needLiving") && u.livingRoom==="no") A("No separate living room");
+  if(needY("needKitchen") && ["None","Pantry only"].includes(u.kitchen)) A(u.kitchen==="None" ? "No kitchen" : "Pantry only, no proper kitchen");
+  if(needY("needLaundry") && u.laundry==="no") A("No laundry spot");
+  if(needY("needHanging") && u.hanging==="no") A("No drying / hanging area");
   if(["W","SW"].includes(u.orientation)) A(`Faces ${u.orientation}: hot afternoon sun`);
+  if(u.facesRoad==="yes") A(isNum(u.floor) && n(u.floor)<=7 ? `Low floor (${fmt(n(u.floor))}) facing a busy road: traffic noise` : "Faces a busy road: traffic noise");
   if(u.nearLift==="yes") A("Next to the lift: noise");
   if(u.nearGarbage==="yes") A("Next to the garbage room: smell");
   if(u.nearCommon==="yes") A("Next to a common area: noise");
@@ -969,7 +1009,7 @@ function flags(u){
   if(["Negotiating","Ready to sign"].includes(u.status) && slotsMissing(u).length) A(`Not yet visited: ${slotsMissing(u).join(", ").toLowerCase()}`);
   return F;
 }
-const COMPLETE_SKIP = new Set(["projectId","loc","label","status","rejectReason","notes","photos","links","downPayment","transferShare","otherTransferCosts","feeHistory","developer","area","station"]);
+const COMPLETE_SKIP = new Set(["projectId","loc","label","status","rejectReason","notes","photos","links","downPayment","transferShare","otherTransferCosts","feeHistory","developer","area","station","otherPlaces"]);
 function completeness(u){
   const p = proj(u), missing = [];
   let total = 0, have = 0;
@@ -982,6 +1022,7 @@ function completeness(u){
   }));
   walk(UNIT_SCHEMA, u, "unit"); walk(PROJECT_SCHEMA, p, "project");
   if(!(u.visits||[]).length){ total++; missing.push({l:"At least one visit", where:"visits"}); } else { total++; have++; }
+  total++; if(hasLoc(p)) have++; else missing.push({l:"Location on the map", where:"project"});
   return { pct: total ? Math.round(have/total*100) : 0, missing };
 }
 function checklistState(u){
@@ -1026,12 +1067,14 @@ const METRICS = {
   ],
   unit: [
     [u=>n(u.size),"high"], [u=>n(u.bedrooms),"high"], [u=>n(u.bathrooms),"high"], [u=>n(u.ceiling),"high"],
+    [u=>{ const t=n(fin().needSize), sz=n(u.size); return t && sz!==null ? clamp(sz/t,0,1) : null; },"abs"],
+    [u=>computed(u).usablePct,"high"], [u=>triS(u.facesRoad,"no"),"abs"],
     [u=>u.orientation ? ORIENT_S[u.orientation] : null,"abs"],
     ...["livingRoom","laundry","hanging","layoutMatches","compressorOk"].map(k=>[u=>triS(u[k],"yes"),"abs"]),
     ...["nearLift","nearGarbage","nearCommon","leaksCracks"].map(k=>[u=>triS(u[k],"no"),"abs"]),
   ],
   building: [
-    [u=>computed(u).unitsPerLift,"low"], [u=>n(proj(u).parkingPct),"high"], [u=>n(proj(u).commonFeeSqm),"low"], [u=>n(proj(u).yearBuilt),"high"],
+    [u=>computed(u).unitsPerLift,"low"], [u=>n(proj(u).unitsPerFloor),"low"], [u=>n(proj(u).parkingPct),"high"], [u=>n(proj(u).commonFeeSqm),"low"], [u=>n(proj(u).yearBuilt),"high"],
     ...["devTrack","devFinance","residentReviews"].map(k=>[u=>rateS(proj(u)[k]),"abs"]),
     [u=>triS(proj(u).sinkingHealthy,"yes"),"abs"], [u=>triS(proj(u).feeArrears,"no"),"abs"], [u=>triS(proj(u).eia,"yes"),"abs"],
     [u=>triS(u.titleChecked,"yes"),"abs"], [u=>triS(u.unpaidBills,"no"),"abs"],
@@ -1060,7 +1103,7 @@ function scoreOf(u){
       const v = g(u); if(v===null || v===undefined || !isFinite(v)) return;
       if(kind==="abs"){ parts.push(v); return; }
       const r = rangeOf(s.k, i); if(!r) return;
-      const [lo, hi] = r; if(hi===lo){ parts.push(1); return; }
+      const [lo, hi] = r; if(hi===lo) return; // nothing to compare against: skip rather than give full marks
       const t = (v-lo)/(hi-lo); parts.push(kind==="low" ? 1-t : t);
     });
     const sc = parts.length ? avgOf(parts)*5 : null;
@@ -1110,7 +1153,7 @@ const projList = () => Object.values(S.projects).sort((a,b)=>(a.name||"").locale
 const unitsOf = pid => Object.values(S.units).filter(u=>u.projectId===pid).sort((a,b)=>(n(a.floor)??0)-(n(b.floor)??0) || (a.label||"").localeCompare(b.label||""));
 
 function render(){
-  rangeCache = new Map(); scoreCache.clear();
+  rangeCache = new Map(); scoreCache.clear(); dealCache.clear();
   if(view==="unit" && !S.units[detailId]) view = "units";
   const tabOf = view==="unit" ? "units" : view;
   document.querySelectorAll("[data-tab]").forEach(b => { const on = b.dataset.tab===tabOf; b.classList.toggle("active", on); if(on) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
@@ -1163,7 +1206,7 @@ function unitCard(u){
     d && d.dti!==null && `<span><b>${pct(d.dti)}</b> of income</span>`,
     sortBy!=="project" && proj(u).name && `<span>${esc(proj(u).name)}</span>`,
   ].filter(Boolean).join("");
-  return `<article class="unit" data-open="${esc(u.id)}" tabindex="0" aria-label="Open ${esc(u.label||"unit")}">
+  return `<article class="unit" data-open="${esc(u.id)}" tabindex="0" role="button" aria-label="Open ${esc(u.label||"unit")}">
     <div class="floor"><b>${n(u.floor)!==null?esc(u.floor):"–"}</b><small>floor</small></div>
     <div class="u-main">
       <div class="u-title"><h4>${esc(u.label||"Untitled unit")}</h4><span class="chip ${st==="Rejected"?"rejected":""}">${esc(st)}</span>${flagChips(fl)}<span class="chip plain">${cp.pct}% complete</span></div>
@@ -1266,7 +1309,8 @@ function moneyTab(u){
       <dt class="total">Total</dt><dd class="total">${baht(d.cost3)}</dd>
       <dt>Interest paid in that time</dt><dd>${baht(d.lc.interest3)}</dd>
       <dt>Loan left after 3 years</dt><dd>${baht(d.lc.bal)}</dd>
-    </dl><p class="hint">Annual land and building tax isn't included.</p></div>
+      <dt>Land and building tax (3 years)</dt><dd>${baht(d.taxYear*3)}</dd>
+    </dl><p class="hint">${f.mainHome==="yes" ? "Tax is ฿0 as your main home (exempt up to ฿50M)." : `Tax estimated at 0.02% of the price, about ${baht(d.taxYear)} a year. It's really charged on the appraised value, which is usually lower. Mark it as your main home in My finance if it will be.`}</p></div>
   </div>`;
 }
 function loansTab(u){
@@ -1343,7 +1387,7 @@ function pipelineView(){
   return `<div class="bar"><h2>Pipeline</h2><span class="muted small">Change a status from the card. Ready to sign needs a finished checklist.</span></div>
   <div class="pipe">${STATUS.map(st => {
     const us = all.filter(u=>(u.status||"Interested")===st).sort((a,b)=>(scoreOf(b).total??-1)-(scoreOf(a).total??-1));
-    return `<section class="pcol"><h3>${st}<span>${us.length}</span></h3>${us.map(u=>{ const fl=flags(u); return `<div class="pcard" data-open="${esc(u.id)}" tabindex="0">
+    return `<section class="pcol"><h3>${st}<span>${us.length}</span></h3>${us.map(u=>{ const fl=flags(u); return `<div class="pcard" data-open="${esc(u.id)}" tabindex="0" role="button" aria-label="Open ${esc(u.label||"unit")}">
       <b>${esc(u.label||"Unit")}</b><span class="muted">${esc(proj(u).name||"")}</span>
       <div class="row">${scoreHtml(scoreOf(u).total)}<span>${n(u.price)!==null?baht(n(u.price)):""}</span></div>
       ${fl.length?`<div class="row" style="justify-content:flex-start;gap:4px">${flagChips(fl)}</div>`:""}
@@ -1409,6 +1453,7 @@ function cmpRows(){
   add("Price", u=>n(u.price), {t:"baht", better:"low"});
   add("Price per sqm", u=>computed(u).pricePerSqm, {t:"baht", better:"low"});
   add("Size (sqm)", u=>n(u.size), {t:"num1", better:"high"});
+  add("Usable share of size", u=>computed(u).usablePct, {t:"pct", better:"high"});
   add("Floor", u=>n(u.floor), {t:"num"});
   add("Facing", u=>u.orientation ? u.orientation + (orientNote(u.orientation)?", "+orientNote(u.orientation):"") : "", {t:"orient"});
   sec("Section scores (out of 5)");
@@ -1425,9 +1470,10 @@ function cmpRows(){
   add("Share of income after year 3", u=>deal(u)?.dtiAfter, {t:"pct", better:"low"});
   add("Cash on transfer day", u=>deal(u)?.upfront, {t:"baht", better:"low"});
   add("Short of savings by", u=>{ const s=deal(u)?.shortfall; return s===null||s===undefined?null:Math.max(0,s); }, {t:"baht", better:"low"});
+  add("Land and building tax a year", u=>deal(u)?.taxYear, {t:"baht", better:"low"});
   add("3-year total cost", u=>deal(u)?.cost3, {t:"baht", better:"low"});
   add("Bank offers recorded", u=>(u.loans||[]).length, {t:"num", better:"high"});
-  const skip = new Set(["projectId","label","status","rejectReason","price","size","floor","orientation","notes","photos","downPayment","transferShare","otherTransferCosts"]);
+  const skip = new Set(["projectId","label","status","rejectReason","price","size","usableArea","floor","orientation","notes","photos","downPayment","transferShare","otherTransferCosts"]);
   for(const s of UNIT_SCHEMA){
     const fs = s.fields.filter(f=>!skip.has(f.k)); if(!fs.length) continue;
     sec(s.sec); fs.forEach(f => add(f.l, u=>u[f.k], fieldCmp(f)));
@@ -1858,9 +1904,21 @@ document.addEventListener("keydown", e => {
 });
 
 /* =================== Versions =================== */
-const APP_VERSION = "V2.0.1";
+const APP_VERSION = "V2.1";
 const VERSION_LOG = [
-  { no:"V2.0.1", name:"Map tiles without an API key", date:"Sep 2026", current:true, items:[
+  { no:"V2.1", name:"Full checklist coverage", date:"Sep 2026", current:true, items:[
+    "My finance has a What you need section: target size (50 sqm by default), bedrooms, living room, kitchen, laundry, drying area and car park. Units that fall short get a warning.",
+    "Parking: if you need a car park, a building with none is a red flag, and first-come or partial parking is a warning.",
+    "New unit fields: usable area (excluding columns and ducts) and whether it faces a busy road. A low floor facing a road is flagged for traffic noise.",
+    "New project fields: units per floor, travel to other places you go often, and whether you've read the building rules. The rules also appear on the checklist.",
+    "Land and building tax is estimated and added to the 3-year cost. Mark the unit as your main home in My finance to apply the exemption.",
+    "Bank offers accept MLR as well as MRR. The rental yield field notes that daily rentals aren't allowed.",
+    "Completeness now counts the project's location on the map.",
+    "Size against your target, usable share and units per floor feed into the score.",
+    "Score fix: when every unit has the same value (or there's only one unit), relative measures like price and commute are left out instead of scoring full marks.",
+    "Faster screens with many units, safer imports (odd record IDs are skipped), and cards announce themselves as buttons to screen readers.",
+  ]},
+  { no:"V2.0.1", name:"Map tiles without an API key", date:"Sep 2026", current:false, items:[
     "The map now uses OpenStreetMap's standard tiles, which need no API key. CARTO's tiles had started showing “API key required” over the whole map.",
     "In dark mode the map is darkened to match the app; light mode shows the normal OpenStreetMap colours.",
   ]},
@@ -1940,6 +1998,7 @@ document.addEventListener("click", e => {
 /* =================== Shell: theme, sidebar, drawer, More sheet =================== */
 function applyTheme(t){
   document.body.dataset.theme = t;
+  const tc = document.querySelector('meta[name="theme-color"]'); if(tc) tc.content = t==="light" ? "#f6f4ef" : "#12141a";
   const b = $("#themeToggleBtn"); if(b) b.textContent = t==="light" ? "◑ Dark mode" : "☀ Light mode";
   try{ localStorage.setItem("condo-theme", t); }catch(e){}
   if(map) setTiles();
