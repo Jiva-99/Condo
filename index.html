@@ -574,14 +574,7 @@ const PROJECT_SCHEMA = [
     {k:"sinkingHealthy", l:"Sinking fund balance healthy", t:"tri", good:"yes"},
     {k:"feeArrears", l:"Many owners behind on common fees", t:"tri", good:"no"},
     {k:"pets", l:"Pets allowed", t:"tri"},
-    {k:"rulesChecked", l:"Building rules read (pets, renting out, renovation)", t:"tri", good:"yes"},
-    {k:"foreignQuota", l:"Foreign quota available", t:"tri", good:"yes"},
-  ]},
-  {sec:"Investment & resale", fields:[
-    {k:"rentalYield", l:"Rental yield in the area (%)", t:"num", better:"high", hint:"Plan on monthly or longer leases. Daily rentals in condos break the Hotel Act."},
-    {k:"rentalDemand", l:"Real tenant demand", t:"rate"},
-    {k:"newSupply", l:"Lots of new condo supply within 1–2 km", t:"tri", good:"no"},
-    {k:"resaleLiquidity", l:"Resale liquidity of this developer's projects", t:"rate"},
+    {k:"rulesChecked", l:"Building rules read (pets, renovation, noise)", t:"tri", good:"yes"},
   ]},
   {sec:"Notes & links", fields:[
     {k:"notes", l:"Notes", t:"area"},
@@ -711,8 +704,7 @@ const CHECKLIST = [
   {k:"meters", l:"Checked for unpaid water, electricity and common fees", secondHand:true, auto:u=>u.unpaidBills==="no" ? "Marked as no unpaid bills" : ""},
   {k:"banks", l:"Compared at least 3 bank offers", auto:u=>(u.loans||[]).length>=3 ? `${(u.loans||[]).length} offers recorded` : ""},
   {k:"credit", l:"Checked your credit bureau report", auto:()=>fin().credit==="Checked, OK" ? "Checked in My finance" : ""},
-  {k:"quota", l:"Checked the building's foreign quota (if you might resell to a foreigner)"},
-  {k:"rules", l:"Read the building rules: pets, renting out (no daily rentals) and renovation", auto:u=>proj(u).rulesChecked==="yes" ? "Marked as read on the project" : ""},
+  {k:"rules", l:"Read the building rules: pets, renovation and noise", auto:u=>proj(u).rulesChecked==="yes" ? "Marked as read on the project" : ""},
   {k:"pressure", l:"Not paying a deposit under “today only” promotion pressure"},
 ];
 
@@ -724,9 +716,8 @@ const SECTIONS = [
   {k:"surround", l:"Surroundings"},
   {k:"unit", l:"Unit & layout"},
   {k:"building", l:"Building & developer"},
-  {k:"invest", l:"Investment & resale"},
 ];
-const DEF_W = {afford:5, location:4, surround:3, unit:3, building:3, invest:2};
+const DEF_W = {afford:5, location:4, surround:3, unit:3, building:3};
 
 /* =================== Helpers =================== */
 const $ = (s, r=document) => r.querySelector(s);
@@ -1002,7 +993,6 @@ function flags(u){
   if(u.layoutMatches==="no") A("Real layout differs from the show room");
   if(p.feeArrears==="yes") A("Many owners behind on common fees");
   if(p.sinkingHealthy==="no") A("Low sinking fund balance");
-  if(p.newSupply==="yes") A("Heavy new supply nearby may hold down resale prices");
   if(p.trafficJam==="yes") A("Traffic jam area");
   if(n(p.floodSafety)!==null && n(p.floodSafety)<=2) A("Flood risk");
   if(n(p.safetyNight)!==null && n(p.safetyNight)<=2) A("Feels unsafe at night");
@@ -1078,10 +1068,6 @@ const METRICS = {
     ...["devTrack","devFinance","residentReviews"].map(k=>[u=>rateS(proj(u)[k]),"abs"]),
     [u=>triS(proj(u).sinkingHealthy,"yes"),"abs"], [u=>triS(proj(u).feeArrears,"no"),"abs"], [u=>triS(proj(u).eia,"yes"),"abs"],
     [u=>triS(u.titleChecked,"yes"),"abs"], [u=>triS(u.unpaidBills,"no"),"abs"],
-  ],
-  invest: [
-    [u=>n(proj(u).rentalYield),"high"], [u=>rateS(proj(u).rentalDemand),"abs"], [u=>rateS(proj(u).resaleLiquidity),"abs"],
-    [u=>triS(proj(u).newSupply,"no"),"abs"], [u=>triS(proj(u).foreignQuota,"yes"),"abs"],
   ],
 };
 let rangeCache = new Map();
@@ -1904,9 +1890,16 @@ document.addEventListener("keydown", e => {
 });
 
 /* =================== Versions =================== */
-const APP_VERSION = "V2.1";
+const APP_VERSION = "V2.2";
 const VERSION_LOG = [
-  { no:"V2.1", name:"Full checklist coverage", date:"Sep 2026", current:true, items:[
+  { no:"V2.2", name:"A home to live in, not an investment", date:"Sep 2026", current:true, items:[
+    "Removed the Investment & resale section: rental yield, tenant demand, new supply nearby and resale liquidity.",
+    "Removed the foreign quota field and its checklist item, which only mattered for reselling to a foreigner.",
+    "The score now has five sections; Investment & resale is gone from the weights and the section bars.",
+    "Building rules now cover pets, renovation and noise rather than renting out.",
+    "Anything you'd already entered in the removed fields stays in your saved data but is no longer shown, scored or counted in completeness.",
+  ]},
+  { no:"V2.1", name:"Full checklist coverage", date:"Sep 2026", current:false, items:[
     "My finance has a What you need section: target size (50 sqm by default), bedrooms, living room, kitchen, laundry, drying area and car park. Units that fall short get a warning.",
     "Parking: if you need a car park, a building with none is a red flag, and first-come or partial parking is a warning.",
     "New unit fields: usable area (excluding columns and ducts) and whether it faces a busy road. A low floor facing a road is flagged for traffic noise.",
