@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Condo shortlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1EF; --surface:#FFFFFF; --ink:#17231F; --muted:#5C6B66; --line:#D5DDD9;
+  --accent:#0E7A5B; --accent-ink:#FFFFFF; --accent-soft:#DCEFE6;
+  --best-bg:#E1F1E8; --best-ink:#0A5C44; --worst-bg:#F7E4DF; --worst-ink:#9A3522;
+  --warm:#C2562E; --cool:#2F6F9A; --shadow:0 1px 2px rgba(23,35,31,.06);
+  --font:"IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111715; --surface:#19221F; --ink:#E6EDEA; --muted:#93A39D; --line:#2C3934;
+    --accent:#3FBF8F; --accent-ink:#0B1411; --accent-soft:#1D3A2F;
+    --best-bg:#173A2D; --best-ink:#8FE0BD; --worst-bg:#3E221B; --worst-ink:#F0A48E;
+    --warm:#E58A62; --cool:#7DB6DD; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#19221F; --ink:#E6EDEA; --muted:#93A39D; --line:#2C3934;
+  --accent:#3FBF8F; --accent-ink:#0B1411; --accent-soft:#1D3A2F;
+  --best-bg:#173A2D; --best-ink:#8FE0BD; --worst-bg:#3E221B; --worst-ink:#F0A48E;
+  --warm:#E58A62; --cool:#7DB6DD; --shadow:none;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-bottom:18px}
+h1{font-size:1.6rem;font-weight:700;letter-spacing:-.01em;margin:0;line-height:1.2}
+.sub{color:var(--muted);margin:2px 0 0;font-size:.9rem}
+nav.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+nav.tabs button{border:0;background:none;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:500;color:var(--muted)}
+nav.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:0 0 14px}
+.bar h2{font-size:1.05rem;margin:0;font-weight:600}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--worst-ink);border-color:var(--worst-ink);background:transparent}
+.btn.small{padding:4px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:default}
+
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:28px 20px;text-align:center;color:var(--muted)}
+.empty p{margin:0 0 12px;max-width:52ch;margin-inline:auto}
+
+.group{margin:0 0 22px}
+.group-h{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;padding:0 2px}
+.group-h h3{margin:0;font-size:.95rem;font-weight:600}
+.group-h span{color:var(--muted);font-size:.85rem}
+
+/* Unit card: floor numeral + compass are the signature */
+.unit{display:grid;grid-template-columns:64px 1fr auto;gap:4px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.floor{text-align:center;line-height:1;border-right:1px solid var(--line);padding-right:12px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.floor b{display:block;font-size:2.1rem;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.floor small{color:var(--muted);font-size:.72rem}
+.u-main{min-width:0}
+.u-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.u-title h4{margin:0;font-size:1rem;font-weight:600}
+.chip{font-size:.75rem;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.chip.rejected{background:var(--worst-bg);color:var(--worst-ink)}
+.stats{display:flex;flex-wrap:wrap;gap:2px 18px;margin:4px 0 0;font-size:.87rem;color:var(--muted)}
+.stats span b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.u-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.u-actions{display:flex;gap:6px;align-items:center}
+.cmp-toggle{display:flex;align-items:center;gap:5px;font-size:.82rem;color:var(--muted);cursor:pointer;white-space:nowrap}
+.cmp-toggle input{accent-color:var(--accent);width:16px;height:16px}
+
+.compass{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted)}
+.compass svg{width:34px;height:34px;display:block}
+.compass .ring{fill:none;stroke:var(--line);stroke-width:1.5}
+.compass .n{fill:var(--muted);font-size:7px;font-family:var(--font);font-weight:600}
+.compass .needle{fill:var(--muted)}
+.compass.warm .needle{fill:var(--warm)} .compass.warm{color:var(--warm)}
+.compass.cool .needle{fill:var(--cool)} .compass.cool{color:var(--cool)}
+
+.proj{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.proj-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.proj-h h3{margin:0;font-size:1.02rem}
+.proj p{margin:2px 0 0;color:var(--muted);font-size:.87rem}
+.proj .stats{margin-top:8px}
+
+/* Compare */
+.pick{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.pick label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px 4px 8px;font-size:.87rem;cursor:pointer}
+.pick input{accent-color:var(--accent)}
+.pick label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);margin:0 0 8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.cmp{border-collapse:separate;border-spacing:0;width:100%;min-width:520px;font-size:.88rem}
+.cmp th,.cmp td{padding:7px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp thead th{position:sticky;top:0;background:var(--surface);font-weight:600;z-index:2}
+.cmp thead th small{display:block;font-weight:400;color:var(--muted)}
+.cmp tbody th{position:sticky;left:0;background:var(--surface);font-weight:400;color:var(--muted);min-width:170px;max-width:220px;z-index:1}
+.cmp tr.sec th{background:var(--bg);color:var(--ink);font-weight:600;font-size:.82rem;padding-top:10px}
+.cmp tr.sec td{background:var(--bg)}
+.cmp td{font-variant-numeric:tabular-nums;min-width:130px}
+.cmp td.best{background:var(--best-bg);color:var(--best-ink);font-weight:600}
+.cmp td.worst{background:var(--worst-bg);color:var(--worst-ink)}
+.cmp .good{color:var(--best-ink);font-weight:500}
+.cmp .bad{color:var(--worst-ink);font-weight:500}
+.cmp .unk{color:var(--muted)}
+.cmp a{color:var(--accent)}
+.dots{letter-spacing:2px;color:var(--accent)} .dots s{text-decoration:none;color:var(--line)}
+
+/* Dialog form */
+dialog{border:0;border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(720px,100% - 24px);max-height:calc(100% - 24px);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,18,15,.45)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100dvh - 24px)}
+.dlg-h{padding:16px 20px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlg-h h2{margin:0;font-size:1.1rem}
+.dlg-b{overflow-y:auto;padding:6px 20px 16px}
+.dlg-f{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.dlg-f .right{display:flex;gap:8px;margin-left:auto}
+fieldset{border:0;margin:14px 0 0;padding:0}
+legend{font-weight:600;font-size:.92rem;margin-bottom:8px;padding:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f > label,.f > .lab{font-size:.83rem;color:var(--muted)}
+.f input[type=text],.f input[type=number],.f input[type=url],.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 10px;width:100%}
+.f textarea{min-height:72px;resize:vertical}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);width:max-content;max-width:100%}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:block;padding:5px 11px;font-size:.85rem;border-right:1px solid var(--line)}
+.seg label:last-child span{border-right:0}
+.seg input:checked + span{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:-2px}
+.links-list{display:flex;flex-direction:column;gap:6px}
+.link-row{display:grid;grid-template-columns:minmax(90px,1fr) 2fr auto;gap:6px}
+.link-row input{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 9px;min-width:0}
+.hint{font-size:.78rem;color:var(--muted);margin:2px 0 0}
+.err{color:var(--worst-ink);font-size:.82rem}
+
+.foot{margin-top:28px;color:var(--muted);font-size:.8rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.foot p{margin:0}
+.tools{display:flex;gap:6px}
+.acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;order:3;width:100%;justify-content:flex-end;font-size:.85rem}
+.who{color:var(--muted);max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.82rem}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync[data-state="synced"]::before{background:var(--accent)}
+.sync[data-state="saving"]::before{background:var(--cool)}
+.sync[data-state="offline"]::before,.sync[data-state="error"]::before{background:var(--warm)}
+@media (min-width:760px){.acct{order:0;width:auto;margin-left:auto}}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+
+@media (max-width:600px){
+  .unit{grid-template-columns:52px 1fr}
+  .floor b{font-size:1.7rem}
+  .u-side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+  dialog{width:100%;max-height:100%;border-radius:0;height:100%}
+  .dlg{max-height:100dvh;height:100%}
+  .link-row{grid-template-columns:1fr auto}
+  .link-row input:first-child{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Condo shortlist</h1>
+      <p class="sub" id="summary">Loading…</p>
+    </div>
+    <div class="acct">
+      <span class="sync" id="sync" data-state="local">Browser only</span>
+      <button class="btn small" id="signIn" hidden>Sign in with Google</button>
+      <span class="who" id="who" hidden></span>
+      <button class="btn small" id="signOut" hidden>Sign out</button>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" data-view="units" aria-selected="true">Units</button>
+      <button role="tab" data-view="projects" aria-selected="false">Projects</button>
+      <button role="tab" data-view="compare" aria-selected="false">Compare</button>
+    </nav>
+  </header>
+  <main id="view"></main>
+  <div class="foot">
+    <p id="storageNote"></p>
+    <div class="tools">
+      <button class="btn small" id="exportBtn">Export JSON</button>
+      <label class="btn small" for="importFile">Import JSON</label>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg"><form class="dlg" id="dlgForm" novalidate></form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG: paste your web app config here (see README).
+   These values are not secrets; your Firestore rules protect the data.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
+  projectId: "PASTE_PROJECT_ID",
+  storageBucket: "PASTE_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "PASTE_SENDER_ID",
+  appId: "PASTE_APP_ID"
+};
+const FIREBASE_VERSION = "12.15.0";
+
+(function(){
+"use strict";
+
+/* ---------- Schema (drives forms and the comparison table) ---------- */
+// t: text | num | tri | rate | select | area | links | project
+// better: 'low' | 'high' for num/rate; good: 'yes' | 'no' for tri
+const ORIENT = ["N","NE","E","SE","S","SW","W","NW"];
+const STATUS = ["Interested","Visited","Inspected","Negotiating","Rejected","Bought"];
+
+const PROJECT_SCHEMA = [
+  {sec:"Basics", fields:[
+    {k:"name", l:"Project name", t:"text", req:true},
+    {k:"developer", l:"Developer", t:"text"},
+    {k:"area", l:"Area / district", t:"text"},
+    {k:"yearBuilt", l:"Completion year", t:"num", better:"high"},
+    {k:"preSale", l:"Pre-sale (not built yet)", t:"tri", good:"no"},
+    {k:"eia", l:"EIA approved", t:"tri", good:"yes"},
+  ]},
+  {sec:"Transport", fields:[
+    {k:"station", l:"Nearest BTS / MRT", t:"text"},
+    {k:"walkToStation", l:"Walk to station (min)", t:"num", better:"low"},
+    {k:"commuteAM", l:"Commute to work, morning rush (min)", t:"num", better:"low"},
+    {k:"commutePM", l:"Commute home, evening rush (min)", t:"num", better:"low"},
+    {k:"trafficJam", l:"Traffic jam area", t:"tri", good:"no"},
+  ]},
+  {sec:"Nearby", fields:[
+    {k:"supermarket", l:"Supermarket", t:"tri", good:"yes"},
+    {k:"sevenEleven", l:"7-Eleven", t:"tri", good:"yes"},
+    {k:"marketFood", l:"Market / restaurants", t:"tri", good:"yes"},
+  ]},
+  {sec:"Surroundings (5 = best)", fields:[
+    {k:"floodSafety", l:"Flood safety", t:"rate", better:"high"},
+    {k:"quiet", l:"Quietness", t:"rate", better:"high"},
+    {k:"airSmell", l:"Air / no bad smells", t:"rate", better:"high"},
+    {k:"safetyDay", l:"Safety by day", t:"rate", better:"high"},
+    {k:"safetyNight", l:"Safety at night", t:"rate", better:"high"},
+  ]},
+  {sec:"Building & juristic person", fields:[
+    {k:"totalUnits", l:"Total units", t:"num"},
+    {k:"lifts", l:"Passenger lifts", t:"num"},
+    {k:"parkingPct", l:"Parking (% of units)", t:"num", better:"high"},
+    {k:"parkingType", l:"Parking type", t:"select", opts:["Fixed","First-come","None"]},
+    {k:"commonFeeSqm", l:"Common fee (฿ / sqm / month)", t:"num", better:"low"},
+    {k:"sinkingFundSqm", l:"Sinking fund (฿ / sqm, one-off)", t:"num", better:"low"},
+    {k:"pets", l:"Pets allowed", t:"tri"},
+    {k:"foreignQuota", l:"Foreign quota available", t:"tri", good:"yes"},
+  ]},
+  {sec:"Notes & links", fields:[
+    {k:"notes", l:"Notes", t:"area"},
+    {k:"links", l:"Links (reviews, Pantip, Facebook group, map)", t:"links"},
+  ]},
+];
+
+const UNIT_SCHEMA = [
+  {sec:"Basics", fields:[
+    {k:"projectId", l:"Project", t:"project", req:true},
+    {k:"label", l:"Unit / room no.", t:"text", req:true},
+    {k:"status", l:"Status", t:"select", opts:STATUS},
+    {k:"price", l:"Price (฿)", t:"num", better:"low"},
+    {k:"size", l:"Size (sqm)", t:"num", better:"high"},
+    {k:"floor", l:"Floor", t:"num"},
+    {k:"orientation", l:"Facing", t:"select", opts:ORIENT},
+    {k:"secondHand", l:"Second-hand", t:"tri"},
+    {k:"furnished", l:"Furnished", t:"select", opts:["Unfurnished","Partly","Fully"]},
+  ]},
+  {sec:"Layout", fields:[
+    {k:"bedrooms", l:"Bedrooms", t:"num", better:"high"},
+    {k:"bathrooms", l:"Bathrooms", t:"num", better:"high"},
+    {k:"livingRoom", l:"Separate living room", t:"tri", good:"yes"},
+    {k:"kitchen", l:"Kitchen", t:"select", opts:["Closed","Open","Pantry only","None"]},
+    {k:"laundry", l:"Laundry spot", t:"tri", good:"yes"},
+    {k:"hanging", l:"Drying / hanging area", t:"tri", good:"yes"},
+    {k:"ceiling", l:"Ceiling height (m)", t:"num", better:"high"},
+    {k:"layoutMatches", l:"Real layout matches show room", t:"tri", good:"yes"},
+  ]},
+  {sec:"Position in building", fields:[
+    {k:"nearLift", l:"Next to lift", t:"tri", good:"no"},
+    {k:"nearGarbage", l:"Next to garbage room", t:"tri", good:"no"},
+    {k:"nearCommon", l:"Next to common area", t:"tri", good:"no"},
+    {k:"compressorOk", l:"Good spot for AC compressor", t:"tri", good:"yes"},
+  ]},
+  {sec:"Notes & photos", fields:[
+    {k:"notes", l:"Notes", t:"area"},
+    {k:"photos", l:"Photo links (Google Drive)", t:"links", hint:"Paste a Drive share link and give it a label, such as “View from balcony”."},
+  ]},
+];
+
+/* ---------- Helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const isNum = v => v !== "" && v !== null && v !== undefined && isFinite(Number(v));
+const n = v => isNum(v) ? Number(v) : null;
+const fmt = (v, d=0) => v === null ? "" : Number(v).toLocaleString("en-US",{maximumFractionDigits:d, minimumFractionDigits:0});
+const baht = v => v === null ? "" : "฿" + fmt(v);
+const safeUrl = u => /^https?:\/\//i.test(String(u||"").trim()) ? String(u).trim() : "";
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2400); }
+
+function computed(u){
+  const p = S.projects[u.projectId] || {};
+  const price=n(u.price), size=n(u.size), fee=n(p.commonFeeSqm), sink=n(p.sinkingFundSqm);
+  const units=n(p.totalUnits), lifts=n(p.lifts);
+  return {
+    pricePerSqm: price!==null && size ? price/size : null,
+    monthlyFee: fee!==null && size!==null ? fee*size : null,
+    sinkingTotal: sink!==null && size!==null ? sink*size : null,
+    unitsPerLift: units!==null && lifts ? units/lifts : null,
+  };
+}
+function orientClass(o){ return ["W","SW","NW"].includes(o) ? "warm" : ["N","NE"].includes(o) ? "cool" : ""; }
+function orientNote(o){ return ["W","SW"].includes(o) ? "hot afternoon sun" : o==="NW" ? "some afternoon sun" : ["N","NE"].includes(o) ? "cooler" : ""; }
+function compass(o){
+  if(!o) return `<div class="compass" title="Facing not recorded"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="ring" cx="20" cy="20" r="17"/><text class="n" x="20" y="10" text-anchor="middle">N</text></svg><span>facing ?</span></div>`;
+  const ang = ORIENT.indexOf(o)*45, note = orientNote(o);
+  return `<div class="compass ${orientClass(o)}" title="Faces ${o}${note?", "+note:""}"><svg viewBox="0 0 40 40" aria-hidden="true"><circle class="ring" cx="20" cy="20" r="17"/><text class="n" x="20" y="10" text-anchor="middle">N</text><g transform="rotate(${ang} 20 20)"><path class="needle" d="M20 5 L25 22 L20 19 L15 22 Z"/></g></svg><span>${o}${note?"<br>"+note:""}</span></div>`;
+}
+
+/* ---------- Store: Firebase (signed in) or this browser (signed out) ---------- */
+const LKEY = "condo-shortlist-v1", CKEY = "condo-shortlist-compare";
+const S = { projects:{}, units:{}, mode:"local", user:null, pending:{projects:false,units:false}, error:"" };
+let FB = null; // loaded Firebase functions + instances
+
+function loadLocal(){
+  S.projects = {}; S.units = {};
+  try{ const d = JSON.parse(localStorage.getItem(LKEY)||"null"); if(d){ S.projects=d.projects||{}; S.units=d.units||{}; } }catch(e){}
+}
+function saveLocal(){
+  try{ localStorage.setItem(LKEY, JSON.stringify({projects:S.projects, units:S.units})); }catch(e){ toast("Couldn't save in this browser. Storage may be full or blocked."); }
+}
+function cloudRef(kind, id){ return FB.doc(FB.db, "users", S.user.uid, kind, id); }
+function cloudFail(e){
+  const code = e && e.code || "";
+  S.error = code==="permission-denied" ? "Firestore refused access. Check your security rules (see README)." : "Couldn't save to Firebase: " + (e && e.message || "unknown error");
+  toast(S.error); updateSync();
+}
+// Cloud writes are not awaited: Firestore applies them locally at once and syncs when online.
+async function put(kind, obj){
+  obj = JSON.parse(JSON.stringify(obj)); obj.updatedAt = new Date().toISOString();
+  S[kind][obj.id] = obj;
+  if(S.mode==="cloud") FB.setDoc(cloudRef(kind, obj.id), obj).catch(cloudFail);
+  else saveLocal();
+  render();
+}
+async function remove(kind, id){
+  delete S[kind][id];
+  if(S.mode==="cloud") FB.deleteDoc(cloudRef(kind, id)).catch(cloudFail);
+  else saveLocal();
+  render();
+}
+
+const configured = !Object.values(FIREBASE_CONFIG).some(v => String(v).includes("PASTE_"));
+let unsubs = [];
+
+async function initFirebase(){
+  if(!configured){ updateSync(); return; }
+  const base = "https://www.gstatic.com/firebasejs/" + FIREBASE_VERSION + "/";
+  try{
+    const [appM, authM, fsM] = await Promise.all([
+      import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-firestore.js")
+    ]);
+    const app = appM.initializeApp(FIREBASE_CONFIG);
+    const auth = authM.getAuth(app);
+    let db;
+    try{ db = fsM.initializeFirestore(app, { localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }); }
+    catch(e){ db = fsM.getFirestore(app); }
+    FB = { auth, db, provider: new authM.GoogleAuthProvider(),
+      signInWithPopup: authM.signInWithPopup, signOut: authM.signOut,
+      doc: fsM.doc, collection: fsM.collection, setDoc: fsM.setDoc, deleteDoc: fsM.deleteDoc, onSnapshot: fsM.onSnapshot };
+    authM.onAuthStateChanged(auth, u => u ? startCloud(u) : stopCloud());
+  }catch(e){
+    S.error = "Couldn't load Firebase. Working in this browser only.";
+    updateSync();
+  }
+}
+
+function startCloud(user){
+  stopCloud(true);
+  S.user = user; S.error = "";
+  const localCopy = { projects:{...S.projects}, units:{...S.units} };
+  const first = { projects:null, units:null };
+  let ready = false;
+  const listen = kind => FB.onSnapshot(
+    FB.collection(FB.db, "users", user.uid, kind),
+    { includeMetadataChanges: true },
+    snap => {
+      const map = {}; snap.docs.forEach(d => { map[d.id] = d.data(); });
+      S.pending[kind] = snap.metadata.hasPendingWrites;
+      first[kind] = map;
+      if(!ready && first.projects && first.units){
+        ready = true; S.mode = "cloud";
+        const cloudEmpty = !Object.keys(first.projects).length && !Object.keys(first.units).length;
+        const hasLocal = Object.keys(localCopy.projects).length || Object.keys(localCopy.units).length;
+        if(cloudEmpty && hasLocal){
+          S.projects = localCopy.projects; S.units = localCopy.units;
+          Object.values(localCopy.projects).forEach(p => FB.setDoc(cloudRef("projects", p.id), p).catch(cloudFail));
+          Object.values(localCopy.units).forEach(u => FB.setDoc(cloudRef("units", u.id), u).catch(cloudFail));
+          toast("Uploaded the condos saved in this browser to your account.");
+        } else { S.projects = first.projects; S.units = first.units; }
+      } else if(ready){ S[kind] = map; }
+      if(ready) render(); else updateSync();
+    },
+    e => { cloudFail(e); }
+  );
+  unsubs = [listen("projects"), listen("units")];
+  updateSync();
+}
+function stopCloud(keepData){
+  unsubs.forEach(f => { try{ f(); }catch(e){} }); unsubs = [];
+  S.user = null; S.pending = {projects:false, units:false};
+  if(!keepData){ S.mode = "local"; loadLocal(); render(); }
+}
+
+function updateSync(){
+  const el = $("#sync"), si = $("#signIn"), so = $("#signOut"), who = $("#who");
+  let state = "local", text = "Browser only";
+  if(S.error){ state = "error"; text = "Sync problem"; el.title = S.error; }
+  else if(S.mode==="cloud"){
+    el.title = "";
+    if(!navigator.onLine){ state="offline"; text="Offline, changes kept on this device"; }
+    else if(S.pending.projects || S.pending.units){ state="saving"; text="Saving…"; }
+    else { state="synced"; text="Synced"; }
+  } else if(S.user){ state="saving"; text="Loading your condos…"; }
+  else if(!configured){ el.title = "Add your Firebase config to sync across devices (see README)."; }
+  el.dataset.state = state; el.textContent = text;
+  si.hidden = !configured || !FB || !!S.user;
+  so.hidden = !S.user;
+  who.hidden = !S.user; who.textContent = S.user ? (S.user.email || S.user.displayName || "") : "";
+  $("#storageNote").textContent = S.mode==="cloud" ? "Saved to your Firebase account and synced across devices." : configured ? "Signed out: saving in this browser only. Sign in to sync." : "Saving in this browser only.";
+}
+window.addEventListener("online", updateSync);
+window.addEventListener("offline", updateSync);
+
+$("#signIn").addEventListener("click", async () => {
+  if(!FB) return;
+  try{ await FB.signInWithPopup(FB.auth, FB.provider); }
+  catch(e){
+    const c = e && e.code || "";
+    if(c==="auth/popup-closed-by-user" || c==="auth/cancelled-popup-request") return;
+    toast(c==="auth/popup-blocked" ? "Sign-in popup was blocked. Allow popups for this site and try again."
+      : c==="auth/unauthorized-domain" ? "This site isn't an authorized domain in Firebase Authentication (see README)."
+      : "Sign-in failed: " + (e.message || c));
+  }
+});
+$("#signOut").addEventListener("click", async () => { if(FB) { await FB.signOut(FB.auth); toast("Signed out"); } });
+
+/* ---------- Export / import ---------- */
+$("#exportBtn").addEventListener("click", () => {
+  const data = { app:"condo-shortlist", version:1, exportedAt:new Date().toISOString(), projects:S.projects, units:S.units };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "condo-shortlist-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+});
+$("#importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    const ok = d && typeof d.projects==="object" && typeof d.units==="object";
+    if(!ok) throw new Error("shape");
+    const ps = Object.values(d.projects).filter(p => p && p.id), us = Object.values(d.units).filter(u => u && u.id);
+    for(const p of ps) await put("projects", p);
+    for(const u of us) await put("units", u);
+    toast(`Imported ${ps.length} project${ps.length===1?"":"s"} and ${us.length} unit${us.length===1?"":"s"}.`);
+  }catch(err){ toast("That file isn't a condo shortlist export."); }
+});
+
+/* ---------- Compare selection (per-browser convenience) ---------- */
+let compareSel = [];
+try{ compareSel = JSON.parse(localStorage.getItem(CKEY)||"[]"); }catch(e){}
+function setCompare(id, on){
+  compareSel = compareSel.filter(x => x!==id); if(on) compareSel.push(id);
+  try{ localStorage.setItem(CKEY, JSON.stringify(compareSel)); }catch(e){}
+}
+
+/* ---------- Views ---------- */
+let view = "units";
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => { view=b.dataset.view; render(); }));
+
+function projList(){ return Object.values(S.projects).sort((a,b)=>(a.name||"").localeCompare(b.name||"")); }
+function unitsOf(pid){ return Object.values(S.units).filter(u=>u.projectId===pid).sort((a,b)=>(n(a.floor)??0)-(n(b.floor)??0) || (a.label||"").localeCompare(b.label||"")); }
+
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view===view));
+  const pc = Object.keys(S.projects).length, uc = Object.keys(S.units).length;
+  $("#summary").textContent = `${pc} project${pc===1?"":"s"}, ${uc} unit${uc===1?"":"s"}`;
+  updateSync();
+  const v = $("#view");
+  if(view==="units") v.innerHTML = unitsView();
+  else if(view==="projects") v.innerHTML = projectsView();
+  else v.innerHTML = compareView();
+}
+
+function unitsView(){
+  const projects = projList();
+  if(!projects.length) return `<div class="empty"><p>Start with the building. Add a project, then add the units you're looking at inside it.</p><button class="btn primary" data-act="new-project">Add project</button></div>`;
+  let h = `<div class="bar"><h2>Units</h2><button class="btn primary" data-act="new-unit">Add unit</button></div>`;
+  let any = false;
+  const orphans = Object.values(S.units).filter(u => !S.projects[u.projectId]);
+  for(const p of projects){
+    const us = unitsOf(p.id); if(!us.length) continue; any = true;
+    h += `<section class="group"><div class="group-h"><h3>${esc(p.name)}</h3><span>${esc([p.area, p.station].filter(Boolean).join(", "))}</span></div>`;
+    h += us.map(unitCard).join("") + `</section>`;
+  }
+  if(orphans.length){ any=true; h += `<section class="group"><div class="group-h"><h3>No project</h3></div>${orphans.map(unitCard).join("")}</section>`; }
+  if(!any) h += `<div class="empty"><p>No units yet. Add the first room you're considering.</p><button class="btn primary" data-act="new-unit">Add unit</button></div>`;
+  return h;
+}
+function unitCard(u){
+  const c = computed(u), inCmp = compareSel.includes(u.id);
+  const st = u.status || "Interested";
+  const stats = [
+    n(u.price)!==null && `<span><b>${baht(n(u.price))}</b></span>`,
+    c.pricePerSqm!==null && `<span><b>${baht(Math.round(c.pricePerSqm))}</b> / sqm</span>`,
+    n(u.size)!==null && `<span><b>${fmt(n(u.size),1)}</b> sqm</span>`,
+    n(u.bedrooms)!==null && `<span><b>${fmt(n(u.bedrooms))}</b> bed</span>`,
+    c.monthlyFee!==null && `<span>fee <b>${baht(Math.round(c.monthlyFee))}</b> / mo</span>`,
+    (u.photos||[]).length && `<span><b>${u.photos.length}</b> photo link${u.photos.length===1?"":"s"}</span>`,
+  ].filter(Boolean).join("");
+  return `<article class="unit">
+    <div class="floor"><b>${n(u.floor)!==null?esc(u.floor):"–"}</b><small>floor</small></div>
+    <div class="u-main">
+      <div class="u-title"><h4>${esc(u.label||"Untitled unit")}</h4><span class="chip ${st==="Rejected"?"rejected":""}">${esc(st)}</span></div>
+      <div class="stats">${stats || "<span>No details yet</span>"}</div>
+    </div>
+    <div class="u-side">
+      ${compass(u.orientation)}
+      <div class="u-actions">
+        <label class="cmp-toggle"><input type="checkbox" data-cmp="${esc(u.id)}" ${inCmp?"checked":""}> Compare</label>
+        <button class="btn small" data-act="edit-unit" data-id="${esc(u.id)}">Edit</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function projectsView(){
+  const projects = projList();
+  if(!projects.length) return `<div class="empty"><p>No projects yet. A project is the building. Shared details like developer, transport, and common fees go here once.</p><button class="btn primary" data-act="new-project">Add project</button></div>`;
+  let h = `<div class="bar"><h2>Projects</h2><button class="btn primary" data-act="new-project">Add project</button></div>`;
+  for(const p of projects){
+    const us = unitsOf(p.id);
+    const upl = n(p.totalUnits)!==null && n(p.lifts) ? n(p.totalUnits)/n(p.lifts) : null;
+    const stats = [
+      `<span><b>${us.length}</b> unit${us.length===1?"":"s"} recorded</span>`,
+      n(p.walkToStation)!==null && `<span><b>${fmt(n(p.walkToStation))}</b> min walk to ${esc(p.station||"station")}</span>`,
+      n(p.commuteAM)!==null && `<span>morning commute <b>${fmt(n(p.commuteAM))}</b> min</span>`,
+      n(p.commonFeeSqm)!==null && `<span>fee <b>${baht(n(p.commonFeeSqm))}</b> / sqm</span>`,
+      upl!==null && `<span><b>${fmt(upl)}</b> units per lift</span>`,
+    ].filter(Boolean).join("");
+    h += `<article class="proj"><div class="proj-h"><h3>${esc(p.name)}</h3>
+      <div class="u-actions"><button class="btn small" data-act="new-unit" data-pid="${esc(p.id)}">Add unit</button><button class="btn small" data-act="edit-project" data-id="${esc(p.id)}">Edit</button></div></div>
+      <p>${esc([p.developer, p.area].filter(Boolean).join(", ")) || "Developer and area not recorded"}</p>
+      <div class="stats">${stats}</div></article>`;
+  }
+  return h;
+}
+
+/* ---------- Compare ---------- */
+function cmpRows(){
+  const rows = [];
+  const sec = l => rows.push({sec:l});
+  const add = (l, get, o={}) => rows.push({l, get, ...o});
+  sec("Summary");
+  add("Project", (u,p)=>p.name||"", {t:"text"});
+  add("Status", u=>u.status||"Interested", {t:"text"});
+  add("Price", u=>n(u.price), {t:"baht", better:"low"});
+  add("Price per sqm", u=>computed(u).pricePerSqm, {t:"baht", better:"low"});
+  add("Size (sqm)", u=>n(u.size), {t:"num1", better:"high"});
+  add("Common fee per month", u=>computed(u).monthlyFee, {t:"baht", better:"low"});
+  add("Sinking fund (one-off)", u=>computed(u).sinkingTotal, {t:"baht", better:"low"});
+  add("Floor", u=>n(u.floor), {t:"num"});
+  add("Facing", u=>u.orientation ? u.orientation + (orientNote(u.orientation)?", "+orientNote(u.orientation):"") : "", {t:"orient"});
+  for(const s of UNIT_SCHEMA){
+    const fs = s.fields.filter(f => !["projectId","label","status","price","size","floor","orientation","notes","photos"].includes(f.k));
+    if(!fs.length) continue; sec(s.sec);
+    fs.forEach(f => add(f.l, u=>u[f.k], fieldCmp(f)));
+  }
+  for(const s of PROJECT_SCHEMA){
+    const fs = s.fields.filter(f => !["name","notes","links"].includes(f.k));
+    if(!fs.length) continue; sec("Project: " + s.sec);
+    fs.forEach(f => add(f.l, (u,p)=>p[f.k], fieldCmp(f)));
+    if(s.sec.startsWith("Building")) add("Units per lift", u=>computed(u).unitsPerLift, {t:"num", better:"low"});
+  }
+  sec("Photos & links");
+  add("Unit photos", u=>u.photos||[], {t:"links"});
+  add("Project links", (u,p)=>p.links||[], {t:"links"});
+  add("Unit notes", u=>u.notes||"", {t:"text"});
+  return rows;
+}
+function fieldCmp(f){
+  if(f.t==="num") return {t:"num1", better:f.better};
+  if(f.t==="rate") return {t:"rate", better:"high"};
+  if(f.t==="tri") return {t:"tri", good:f.good};
+  return {t:"text"};
+}
+function cell(r, v){
+  if(r.t==="baht") return v===null||v===undefined ? "" : baht(Math.round(v));
+  if(r.t==="num") return v===null||v===undefined ? "" : fmt(v);
+  if(r.t==="num1") { const x=n(v); return x===null ? "" : fmt(x,2); }
+  if(r.t==="rate") { const x=n(v); if(!x) return ""; return `<span class="dots" aria-label="${x} of 5">${"●".repeat(x)}<s>${"●".repeat(5-x)}</s></span>`; }
+  if(r.t==="tri"){
+    if(v!=="yes" && v!=="no") return `<span class="unk">Not sure</span>`;
+    const cls = r.good ? (v===r.good ? "good" : "bad") : "";
+    return `<span class="${cls}">${v==="yes"?"Yes":"No"}</span>`;
+  }
+  if(r.t==="links"){
+    const ls = (v||[]).filter(x=>safeUrl(x.url));
+    return ls.map(x=>`<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.label||"Link")}</a>`).join("<br>");
+  }
+  if(r.t==="orient"){ const o=(v||"").split(",")[0]; return v ? `<span style="color:var(--${orientClass(o)||"ink"})">${esc(v)}</span>` : ""; }
+  return esc(v);
+}
+function compareView(){
+  const all = Object.values(S.units).sort((a,b)=>((S.projects[a.projectId]||{}).name||"").localeCompare((S.projects[b.projectId]||{}).name||"") || (a.label||"").localeCompare(b.label||""));
+  if(all.length < 2) return `<div class="empty"><p>Add at least two units to compare them side by side.</p><button class="btn primary" data-act="new-unit" ${Object.keys(S.projects).length?"":"disabled"}>Add unit</button></div>`;
+  compareSel = compareSel.filter(id => S.units[id]);
+  const sel = compareSel.map(id => S.units[id]);
+  let h = `<div class="bar"><h2>Compare</h2><span class="sub">Tick units to add or remove columns.</span></div><div class="pick">`;
+  h += all.map(u => `<label><input type="checkbox" data-cmp="${esc(u.id)}" ${compareSel.includes(u.id)?"checked":""}>${esc(u.label||"Unit")}<span class="sub" style="margin:0">${esc((S.projects[u.projectId]||{}).name||"")}</span></label>`).join("");
+  h += `</div>`;
+  if(sel.length < 2) return h + `<div class="empty"><p>Pick at least two units above.</p></div>`;
+  h += `<div class="legend"><span><i style="background:var(--best-bg)"></i>Best in row</span><span><i style="background:var(--worst-bg)"></i>Worst in row</span></div>`;
+  h += `<div class="tablewrap"><table class="cmp"><thead><tr><th scope="col">&nbsp;</th>`;
+  h += sel.map(u => `<th scope="col">${esc(u.label||"Unit")}<small>${esc((S.projects[u.projectId]||{}).name||"")}</small></th>`).join("") + `</tr></thead><tbody>`;
+  for(const r of cmpRows()){
+    if(r.sec){ h += `<tr class="sec"><th scope="rowgroup">${esc(r.sec)}</th>${sel.map(()=>"<td></td>").join("")}</tr>`; continue; }
+    const vals = sel.map(u => r.get(u, S.projects[u.projectId]||{}));
+    let best=null, worst=null;
+    if(r.better){
+      const nums = vals.map(v=>n(v)).filter(v=>v!==null && !(r.t==="rate" && v===0));
+      if(nums.length>=2 && new Set(nums).size>1){
+        best = r.better==="low" ? Math.min(...nums) : Math.max(...nums);
+        worst = r.better==="low" ? Math.max(...nums) : Math.min(...nums);
+      }
+    }
+    h += `<tr><th scope="row">${esc(r.l)}</th>` + vals.map(v => {
+      const x = n(v); const cls = best!==null && x===best ? "best" : worst!==null && x===worst ? "worst" : "";
+      return `<td class="${cls}">${cell(r, v)}</td>`;
+    }).join("") + `</tr>`;
+  }
+  return h + `</tbody></table></div>`;
+}
+
+/* ---------- Forms ---------- */
+const dlg = $("#dlg"), form = $("#dlgForm");
+let editing = null; // {kind, obj}
+
+function fieldHtml(f, val, ctx){
+  const id = "f_" + f.k, req = f.req ? " required" : "";
+  const wide = ["area","links"].includes(f.t) ? " wide" : "";
+  let inner = "";
+  if(f.t==="text") inner = `<label for="${id}">${esc(f.l)}</label><input type="text" id="${id}" name="${f.k}" value="${esc(val)}"${req}>`;
+  else if(f.t==="num") inner = `<label for="${id}">${esc(f.l)}</label><input type="number" inputmode="decimal" step="any" id="${id}" name="${f.k}" value="${esc(val)}">`;
+  else if(f.t==="area") inner = `<label for="${id}">${esc(f.l)}</label><textarea id="${id}" name="${f.k}">${esc(val)}</textarea>`;
+  else if(f.t==="select") inner = `<label for="${id}">${esc(f.l)}</label><select id="${id}" name="${f.k}"><option value="">Not set</option>${f.opts.map(o=>`<option ${o===val?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  else if(f.t==="project") inner = `<label for="${id}">${esc(f.l)}</label><select id="${id}" name="${f.k}" required>${projList().map(p=>`<option value="${esc(p.id)}" ${p.id===val?"selected":""}>${esc(p.name)}</option>`).join("")}</select>`;
+  else if(f.t==="tri") inner = `<span class="lab" id="${id}">${esc(f.l)}</span><div class="seg" role="radiogroup" aria-labelledby="${id}">${[["yes","Yes"],["no","No"],["","Not sure"]].map(([v,l])=>`<label><input type="radio" name="${f.k}" value="${v}" ${(val||"")===v?"checked":""}><span>${l}</span></label>`).join("")}</div>`;
+  else if(f.t==="rate") inner = `<span class="lab" id="${id}">${esc(f.l)}</span><div class="seg" role="radiogroup" aria-labelledby="${id}">${["1","2","3","4","5",""].map(v=>`<label><input type="radio" name="${f.k}" value="${v}" ${String(val||"")===v?"checked":""}><span>${v||"?"}</span></label>`).join("")}</div>`;
+  else if(f.t==="links"){
+    const rows = (val&&val.length?val:[]).map(linkRow).join("");
+    inner = `<span class="lab">${esc(f.l)}</span><div class="links-list" data-links="${f.k}">${rows}</div><div><button type="button" class="btn small" data-addlink="${f.k}">Add link</button></div>${f.hint?`<p class="hint">${esc(f.hint)}</p>`:""}`;
+  }
+  return `<div class="f${wide}">${inner}</div>`;
+}
+function linkRow(x={}){
+  return `<div class="link-row"><input type="text" placeholder="Label" aria-label="Link label" value="${esc(x.label||"")}"><input type="url" placeholder="https://drive.google.com/…" aria-label="Link address" value="${esc(x.url||"")}"><button type="button" class="btn small" data-dellink aria-label="Remove link">Remove</button></div>`;
+}
+
+function openForm(kind, obj){
+  const isNew = !obj;
+  obj = obj ? JSON.parse(JSON.stringify(obj)) : {id: uid()};
+  if(isNew && kind==="units" && !obj.status) obj.status = "Interested";
+  editing = {kind, obj, isNew};
+  const schema = kind==="projects" ? PROJECT_SCHEMA : UNIT_SCHEMA;
+  const noun = kind==="projects" ? "project" : "unit";
+  let h = `<div class="dlg-h"><h2>${isNew?"Add":"Edit"} ${noun}</h2><button type="button" class="btn small" data-close>Close</button></div><div class="dlg-b">`;
+  for(const s of schema){
+    h += `<fieldset><legend>${esc(s.sec)}</legend><div class="grid">${s.fields.map(f=>fieldHtml(f, obj[f.k])).join("")}</div></fieldset>`;
+  }
+  h += `<p class="err" id="formErr" role="alert"></p></div><div class="dlg-f">`;
+  if(!isNew) h += `<button type="button" class="btn danger" data-del>Delete ${noun}</button>`;
+  h += `<div class="right"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn primary">Save ${noun}</button></div></div>`;
+  form.innerHTML = h;
+  if(typeof dlg.showModal==="function") dlg.showModal(); else dlg.setAttribute("open","");
+  const firstInput = form.querySelector(".dlg-b input, .dlg-b select"); if(firstInput) firstInput.focus();
+}
+function closeForm(){ editing=null; if(dlg.open) dlg.close(); }
+
+form.addEventListener("click", async e => {
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.hasAttribute("data-close")) closeForm();
+  else if(t.dataset.addlink){ form.querySelector(`[data-links="${t.dataset.addlink}"]`).insertAdjacentHTML("beforeend", linkRow()); form.querySelector(`[data-links="${t.dataset.addlink}"] .link-row:last-child input`).focus(); }
+  else if(t.hasAttribute("data-dellink")) t.closest(".link-row").remove();
+  else if(t.hasAttribute("data-del")){
+    const {kind,obj} = editing;
+    if(kind==="projects"){
+      const us = unitsOf(obj.id);
+      if(t.dataset.confirm!=="1"){ t.dataset.confirm="1"; t.textContent = us.length ? `Delete project and its ${us.length} unit${us.length===1?"":"s"}` : "Confirm delete"; return; }
+      try{ for(const u of us) await remove("units", u.id); await remove("projects", obj.id); closeForm(); toast("Project deleted"); }catch(err){}
+    } else {
+      if(t.dataset.confirm!=="1"){ t.dataset.confirm="1"; t.textContent="Confirm delete"; return; }
+      try{ await remove("units", obj.id); setCompare(obj.id,false); closeForm(); toast("Unit deleted"); }catch(err){}
+    }
+  }
+});
+
+form.addEventListener("submit", async e => {
+  e.preventDefault(); if(!editing) return;
+  const {kind, obj, isNew} = editing;
+  const schema = kind==="projects" ? PROJECT_SCHEMA : UNIT_SCHEMA;
+  const fd = new FormData(form); const err = $("#formErr"); err.textContent="";
+  for(const s of schema) for(const f of s.fields){
+    if(f.t==="links"){
+      obj[f.k] = [...form.querySelectorAll(`[data-links="${f.k}"] .link-row`)].map(r => { const [a,b]=r.querySelectorAll("input"); return {label:a.value.trim(), url:b.value.trim()}; }).filter(x=>x.url||x.label);
+      const bad = obj[f.k].find(x => x.url && !safeUrl(x.url));
+      if(bad){ err.textContent = `“${bad.url}” isn't a web address. Links must start with https://`; return; }
+    } else {
+      const v = fd.get(f.k); obj[f.k] = v===null ? "" : String(v).trim();
+      if(f.req && !obj[f.k]){ err.textContent = `${f.l} is required.`; form.querySelector(`[name="${f.k}"]`)?.focus(); return; }
+    }
+  }
+  const btn = form.querySelector('button[type="submit"]'); btn.disabled = true;
+  try{
+    await put(kind, obj);
+    if(isNew && kind==="units"){ setCompare(obj.id, true); render(); }
+    closeForm(); toast(`${kind==="projects"?"Project":"Unit"} saved`);
+  }catch(err2){ btn.disabled=false; }
+});
+dlg.addEventListener("close", () => { editing=null; });
+
+/* ---------- Page actions ---------- */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if(!b || b.closest("dialog")) return;
+  const a = b.dataset.act;
+  if(a==="new-project") openForm("projects");
+  else if(a==="edit-project") openForm("projects", S.projects[b.dataset.id]);
+  else if(a==="new-unit"){
+    if(!projList().length){ openForm("projects"); toast("Add the project (building) first"); return; }
+    openForm("units", b.dataset.pid ? null : null);
+    if(b.dataset.pid){ const sel = form.querySelector('[name="projectId"]'); if(sel) sel.value = b.dataset.pid; }
+  }
+  else if(a==="edit-unit") openForm("units", S.units[b.dataset.id]);
+});
+document.addEventListener("change", e => {
+  const c = e.target.closest("[data-cmp]"); if(!c) return;
+  setCompare(c.dataset.cmp, c.checked);
+  if(view==="compare") render();
+});
+
+loadLocal();
+render();
+initFirebase();
+})();
+</script>
+</body>
+</html>
